@@ -1,0 +1,121 @@
+import random
+
+# Function to calculate the modular inverse of A
+def mod_inverse(A, m=26):
+    """
+    Calculate the modular inverse of A modulo m using brute force.
+    The modular inverse is the number x such that (A * x) % m = 1.
+
+    Parameters:
+        A (int): The value for which the modular inverse is to be calculated.
+        m (int): The modulus (default is 26).
+
+    Returns:
+        int or None: The modular inverse if it exists, otherwise None.
+    """
+    for i in range(1, m):
+        if (A * i) % m == 1:
+            return i
+    return None
+
+# Function to encrypt the message using the Affine cipher
+def encrypt(message, A, B):
+    """
+    Encrypt the given message using the Affine cipher formula: E(x) = (A * x + B) % 26.
+
+    Parameters:
+        message (str): The plaintext message to encrypt.
+        A (int): The multiplicative key.
+        B (int): The additive key.
+
+    Returns:
+        str: The encrypted message.
+    """
+    encrypted_message = ""
+    for char in message:
+        if char.isalpha():  # Check if the character is a letter
+            x = ord(char.lower()) - ord('a')  # Convert letter to a number (0-25)
+            encrypted_char = (A * x + B) % 26  # Apply the Affine cipher formula
+            encrypted_message += chr(encrypted_char + ord('a'))  # Convert number back to a letter
+        else:
+            encrypted_message += char  # Keep non-alphabetic characters unchanged
+    return encrypted_message
+
+# Function to decrypt the message using the Affine cipher
+def decrypt(message, A, B):
+    """
+    Decrypt the given message using the Affine cipher formula: D(x) = A_inv * (x - B) % 26.
+
+    Parameters:
+        message (str): The encrypted message to decrypt.
+        A (int): The multiplicative key.
+        B (int): The additive key.
+
+    Returns:
+        str: The decrypted message, or an error message if decryption is not possible.
+    """
+    decrypted_message = ""
+    A_inv = mod_inverse(A)  # Find the modular inverse of A
+    if A_inv is None:  # Check if A has no modular inverse
+        return "Error: No modular inverse for A, decryption impossible."
+    
+    for char in message:
+        if char.isalpha():
+            c = ord(char.lower()) - ord('a')  # Convert letter to a number (0-25)
+            decrypted_char = (A_inv * (c - B)) % 26  # Apply the Affine decryption formula
+            decrypted_message += chr(decrypted_char + ord('a'))  # Convert number back to a letter
+        else:
+            decrypted_message += char  # Keep non-alphabetic characters unchanged
+    return decrypted_message
+
+# Function to save a message to a file
+def save_message_to_file(filename, message):
+    """
+    Save the given message to a file.
+
+    Parameters:
+        filename (str): The name of the file to save the message in.
+        message (str): The message to save.
+    """
+    with open(filename, 'w') as file:
+        file.write(message)
+
+# Main function to drive the process
+def main():
+    """
+    Main function to perform encryption or decryption of a message using the Affine cipher.
+    """
+    # Generate random values for A and B (keys for the Affine cipher)
+    A = random.randint(1, 25)  # A must be coprime to 26 (choose values between 1 and 25)
+    while mod_inverse(A) is None:  # Ensure A has a modular inverse
+        A = random.randint(1, 25)
+    B = random.randint(0, 25)  # B can be any value between 0 and 25
+
+    print(f"Generated keys: A = {A}, B = {B}")
+
+    # Get user input for the message
+    message = input("Enter a message: ")
+
+    # Ask whether the user wants to encrypt or decrypt the message
+    choice = input("Do you want to (E)ncrypt or (D)ecrypt the message? (E/D): ").upper()
+
+    if choice == 'E':  # Encrypt the message
+        encrypted_message = encrypt(message, A, B)
+        print(f"Encrypted message: {encrypted_message}")
+        
+        # Save the encrypted message to a file
+        save_message_to_file("encrypted_message.txt", encrypted_message)
+        print("Encrypted message has been saved to 'encrypted_message.txt'.")
+        
+    elif choice == 'D':  # Decrypt the message
+        decrypted_message = decrypt(message, A, B)
+        print(f"Decrypted message: {decrypted_message}")
+        
+        # Save the decrypted message to a file
+        save_message_to_file("decrypted_message.txt", decrypted_message)
+        print("Decrypted message has been saved to 'decrypted_message.txt'.")
+    else:
+        print("Invalid choice. Please choose E to encrypt or D to decrypt.")
+
+if _name_ == "_main_":
+    main()
